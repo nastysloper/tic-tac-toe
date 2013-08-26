@@ -18,6 +18,8 @@ WINNING_HANDS = {
   :hand8 => [2,4,6]
 }
 
+CENTER = 4
+
 class TicTacToeGame
 
   def initialize
@@ -29,6 +31,7 @@ class TicTacToeGame
     @opponent = []
     @computer = []
     @occupied = []
+    @middles = [1, 3, 5, 7]
     @game_on = true
   end
 
@@ -45,12 +48,20 @@ class TicTacToeGame
   end
 
   def clear_screen
-    print "\033[2J"
+    #print "\033[2J"
+  end
+
+  def add_color
+    print "\x1b[33m"
+  end
+  
+  def clear_colors
+    print "\x1b[0m"
   end
 
   def welcome
     clear_screen
-    print "\x1b[33m"
+    add_color
     print "\n"
     puts "*********" * 6
     print "\n"
@@ -63,12 +74,13 @@ class TicTacToeGame
   end
 
   def show_menu
-    print "\n"
+    clear_screen
     puts "> Your options are"
     puts "> type q to quit"
     puts "> or select an open square:"
     puts "> #{@open_spots}"
-
+    print "\n"
+    render_board
   end
 
   def status
@@ -81,7 +93,7 @@ class TicTacToeGame
       puts "It's a draw!"
       print "\n"
       render_board
-      print "\x1b[0m"
+      clear_colors
       Process.exit
     end
   end
@@ -89,6 +101,7 @@ class TicTacToeGame
   def update_board move
     @occupied << move
     @open_spots.delete(move)
+    @middles.delete(move) if @middles.include?(move)
     @corners.delete(move) if @corners.include?(move)
   end
 
@@ -116,7 +129,7 @@ class TicTacToeGame
 
       if player_move == 'q'
         puts "Exiting game"
-        print "\x1b[0m"
+        clear_colors
         Process.exit
       elsif player_move == 'help'
         show_menu
@@ -127,8 +140,11 @@ class TicTacToeGame
         @opponent.sort!
         update_board player_move 
       else
-        puts "> pick a spot between 0 and 8 that's open"
+        clear_screen
+        puts " ** That's not a valid option  **"
+        puts " ** please choose another...   **"
         print "\n"
+        render_board
       end
     end
   end
@@ -136,19 +152,28 @@ class TicTacToeGame
   def computer_move
     move = nil
     move = take_center
-    move = try_win if !move
+    move = try_win if !move and @computer.length > 1
     move = block_opponent if !move
+    move = cross if !move and @computer.length < 2 and @computer.include?(CENTER) 
     move = take_corner if !move
     move = default if !move
   end
 
   def take_center
-    return nil if !@open_spots.include?(4)
-    move = 4
-    update_board move
-    @computer << move    
+    return nil if !@open_spots.include?(CENTER)
+    move = CENTER
+    update_board CENTER
+    @computer << CENTER  
     @computer.sort!
     move
+  end
+
+  def cross
+    move = @middles.sample
+    @computer << move
+    @computer.sort!
+    update_board(move)
+    return move
   end
 
   def try_win
@@ -179,12 +204,15 @@ class TicTacToeGame
   end
 
   def block_opponent
-   
     check_hands
   end
 
   def default
-    @open_spots.sample
+    move = @open_spots.sample
+    @computer << move
+    @computer.sort!
+    update_board move
+    move
   end
 
   def game_over?
@@ -197,7 +225,7 @@ class TicTacToeGame
             puts "Opponent is the winner!"
             print "\n"
             render_board
-            print "\x1b[0m"
+            clear_colors
             Process.exit
           end
         end
@@ -211,7 +239,7 @@ class TicTacToeGame
             puts "Computer is the winner!"
             print "\n"
             render_board
-            print "\x1b[0m"
+            clear_colors
             Process.exit
           end
         end
@@ -220,26 +248,29 @@ class TicTacToeGame
   end
 
   def take_corner
+    puts "in take corner"
     return if @corners.empty?
+    puts "Anything?"
     move = @corners.sample
-    update_board move
     @computer << move
     @computer.sort!
+    update_board move
     return move
   end
 
   def take_open_spot
     move = @open_spots.sample
     @computer << move
+    @computer.sort!
     update_board move
     puts @computer
-    @computer.sort!
   end
 
 
   def block hand, winning_row
+    puts "this should work in block."
     WINNING_HANDS[hand].each do |element|
-      if !winning_row.include?(element) && !@occupied.include?(element)
+      if !winning_row.include?(element) and !@occupied.include?(element)
         move = element
         update_board element
         @computer << move
@@ -250,7 +281,6 @@ class TicTacToeGame
   end
 
   def check_hands
-    
     return if @opponent.length < 2
     WINNING_HANDS.each do |hand, value|
       winning_row_count = 0
@@ -268,8 +298,8 @@ class TicTacToeGame
       if winning_row_count == 2
         return block(hand, winning_row)
       end
-    end 
-    return nil
+    end
+    return nil 
   end 
 end 
 
