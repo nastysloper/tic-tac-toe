@@ -251,7 +251,7 @@ class TicTacToeGame
 
   def block hand, winning_row
     WINNING_HANDS[hand].each do |element|
-      if !winning_row.include?(element) and !@occupied.include?(element)
+      if !winning_row.include?(element)
         move = element
         update_board element
         @computer << move
