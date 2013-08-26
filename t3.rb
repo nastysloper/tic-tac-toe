@@ -137,7 +137,6 @@ class TicTacToeGame
         player_move = player_move.to_i
         turn = false
         @opponent << player_move
-        @opponent.sort!
         update_board player_move 
       else
         clear_screen
@@ -164,14 +163,12 @@ class TicTacToeGame
     move = CENTER
     update_board CENTER
     @computer << CENTER  
-    @computer.sort!
     move
   end
 
   def cross
     move = @middles.sample
     @computer << move
-    @computer.sort!
     update_board(move)
     return move
   end
@@ -193,7 +190,6 @@ class TicTacToeGame
         value.each do |element|
           next if @computer.include?(element)
           @computer << element
-          @computer.sort!
           update_board element
           return element
         end
@@ -209,7 +205,6 @@ class TicTacToeGame
   def default
     move = @open_spots.sample
     @computer << move
-    @computer.sort!
     update_board move
     move
   end
@@ -250,7 +245,6 @@ class TicTacToeGame
     return if @corners.empty?
     move = @corners.sample
     @computer << move
-    @computer.sort!
     update_board move
     return move
   end
@@ -261,7 +255,6 @@ class TicTacToeGame
         move = element
         update_board element
         @computer << move
-        @computer.sort!
         return move
       end
     end
