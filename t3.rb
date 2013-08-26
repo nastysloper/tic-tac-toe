@@ -48,7 +48,7 @@ class TicTacToeGame
   end
 
   def clear_screen
-    #print "\033[2J"
+    print "\033[2J"
   end
 
   def add_color
@@ -248,9 +248,7 @@ class TicTacToeGame
   end
 
   def take_corner
-    puts "in take corner"
     return if @corners.empty?
-    puts "Anything?"
     move = @corners.sample
     @computer << move
     @computer.sort!
@@ -268,7 +266,6 @@ class TicTacToeGame
 
 
   def block hand, winning_row
-    puts "this should work in block."
     WINNING_HANDS[hand].each do |element|
       if !winning_row.include?(element) and !@occupied.include?(element)
         move = element
@@ -299,7 +296,7 @@ class TicTacToeGame
         return block(hand, winning_row)
       end
     end
-    return nil 
+    return nil # Need to return this nil value for proper control flow
   end 
 end 
 
