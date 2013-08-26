@@ -190,7 +190,6 @@ class TicTacToeGame
       end
 
       if winning_row == 2
-        
         value.each do |element|
           next if @computer.include?(element)
           @computer << element
@@ -255,15 +254,6 @@ class TicTacToeGame
     update_board move
     return move
   end
-
-  def take_open_spot
-    move = @open_spots.sample
-    @computer << move
-    @computer.sort!
-    update_board move
-    puts @computer
-  end
-
 
   def block hand, winning_row
     WINNING_HANDS[hand].each do |element|
