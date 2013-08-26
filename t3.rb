@@ -37,21 +37,29 @@ class TicTacToeGame
     while @game_on
       render_board
       player_move
-      
+      clear_screen
       status
-      computer_move
-      
+      computer_move    
       status 
     end
   end
 
+  def clear_screen
+    print "\033[2J"
+  end
+
   def welcome
+    clear_screen
+    print "\x1b[33m"
     print "\n"
     puts "*********" * 6
     print "\n"
     puts "Welcome to Tic Tac Toe!"
+    puts "Your moves will be marked with an X."
+    puts "The computer's moves will be marked with an 0."
     puts "Type help for menu and options."
     puts "Good luck!"
+    print "\n"
   end
 
   def show_menu
@@ -60,6 +68,7 @@ class TicTacToeGame
     puts "> type q to quit"
     puts "> or select an open square:"
     puts "> #{@open_spots}"
+
   end
 
   def status
@@ -70,7 +79,9 @@ class TicTacToeGame
   def draw?
     if @open_spots.empty?
       puts "It's a draw!"
+      print "\n"
       render_board
+      print "\x1b[0m"
       Process.exit
     end
   end
@@ -100,10 +111,12 @@ class TicTacToeGame
     while turn
       puts "> These are the open spots: #{@open_spots}"
       print "> Which do you choose? "
+      
       player_move = gets.chomp
 
       if player_move == 'q'
         puts "Exiting game"
+        print "\x1b[0m"
         Process.exit
       elsif player_move == 'help'
         show_menu
@@ -122,7 +135,6 @@ class TicTacToeGame
 
   def computer_move
     move = nil
-    puts "What will it be? #{@open_spots}"
     move = take_center
     move = try_win if !move
     move = block_opponent if !move
@@ -141,7 +153,7 @@ class TicTacToeGame
 
   def try_win
     return nil if @computer.length < 2
-    #puts "trying for a win"
+   
     WINNING_HANDS.each do |hand, value|
       winning_row = 0
       value.each do |element|
@@ -153,7 +165,7 @@ class TicTacToeGame
       end
 
       if winning_row == 2
-        #puts "going for it!"
+        
         value.each do |element|
           next if @computer.include?(element)
           @computer << element
@@ -167,7 +179,7 @@ class TicTacToeGame
   end
 
   def block_opponent
-    #puts "In block opp"
+   
     check_hands
   end
 
@@ -183,7 +195,9 @@ class TicTacToeGame
           counter += 1
           if counter == 3
             puts "Opponent is the winner!"
+            print "\n"
             render_board
+            print "\x1b[0m"
             Process.exit
           end
         end
@@ -195,7 +209,9 @@ class TicTacToeGame
           counter += 1
           if counter == 3
             puts "Computer is the winner!"
+            print "\n"
             render_board
+            print "\x1b[0m"
             Process.exit
           end
         end
@@ -205,7 +221,6 @@ class TicTacToeGame
 
   def take_corner
     return if @corners.empty?
-    #puts "In take corner"
     move = @corners.sample
     update_board move
     @computer << move
@@ -214,7 +229,6 @@ class TicTacToeGame
   end
 
   def take_open_spot
-    #puts "In take an open spot..."
     move = @open_spots.sample
     @computer << move
     update_board move
@@ -224,7 +238,6 @@ class TicTacToeGame
 
 
   def block hand, winning_row
-    #puts "In block"
     WINNING_HANDS[hand].each do |element|
       if !winning_row.include?(element) && !@occupied.include?(element)
         move = element
@@ -237,7 +250,7 @@ class TicTacToeGame
   end
 
   def check_hands
-    #puts "in check"
+    
     return if @opponent.length < 2
     WINNING_HANDS.each do |hand, value|
       winning_row_count = 0
@@ -253,8 +266,7 @@ class TicTacToeGame
       end
 
       if winning_row_count == 2
-        #puts "Opponent is in position to win!"
-          return block(hand, winning_row)
+        return block(hand, winning_row)
       end
     end 
     return nil
