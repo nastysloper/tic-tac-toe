@@ -1,5 +1,5 @@
-# This program allows a user to play the computer at Tic Tac Toe
-# The aim is to design an AI that will win or draw
+# This program allows a user to play Tic-Tac-Toe against the computer
+# where the computer will either win or draw.
 
 WINNING_HANDS = {
 
@@ -40,12 +40,12 @@ class TicTacToeGame
       status
       computer_move
       puts "computer has: #{@computer}"
+      render_board
       status 
     end
   end
 
   def welcome
-    
     print "\n"
     puts "*********" * 6
     print "\n"
@@ -78,6 +78,20 @@ class TicTacToeGame
     @occupied << move
     @open_spots.delete(move)
     @corners.delete(move) if @corners.include?(move)
+  end
+
+  def render_board
+    board = ['-'] * 9
+    @computer.each { |element| board[element] = 'O' } 
+    @opponent.each { |element| board[element] = 'X' } 
+
+    i = 0
+    3.times do
+      print " #{board[i]} | #{board[i+1]} | #{board[i+2]}\n"
+      puts  " _________ "
+      i += 3
+    end
+    print "\n"
   end
 
   def player_move
