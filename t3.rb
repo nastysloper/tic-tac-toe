@@ -1,8 +1,6 @@
 # This program allows a user to play the computer at Tic Tac Toe
 # The aim is to design an AI that will win or draw
 
-require 'pry'
-
 WINNING_HANDS = {
 
   # horizontal winning hands
@@ -21,7 +19,6 @@ WINNING_HANDS = {
 }
 
 class TicTacToeGame
-  attr_reader :opponent, :computer
 
   def initialize
     @open_spots = [0, 1, 2,
@@ -33,10 +30,10 @@ class TicTacToeGame
     @computer = []
     @occupied = []
     @game_on = true
-    @turn = false
   end
 
   def play
+    welcome
     while @game_on
       player_move
       puts "opponent has: #{@opponent}"
@@ -47,13 +44,27 @@ class TicTacToeGame
     end
   end
 
+  def welcome
+    
+    print "\n"
+    puts "*********" * 6
+    print "\n"
+    puts "Welcome to Tic Tac Toe!"
+    puts "Type help for menu and options."
+    puts "Good luck!"
+  end
+
+  def show_menu
+    print "\n"
+    puts "> Your options are"
+    puts "> type q to quit"
+    puts "> or select an open square:"
+    puts "> #{@open_spots}"
+  end
+
   def status
     game_over?
     draw?
-  end
-
-  def winner?
-    true
   end
 
   def draw?
@@ -70,24 +81,26 @@ class TicTacToeGame
   end
 
   def player_move
-    flag = true
-    while flag 
-      puts "These are the open spots: #{@open_spots}"
-      puts "What's your move?"
+    turn = true
+    while turn
+      puts "> These are the open spots: #{@open_spots}"
+      print "> Which do you choose? "
       player_move = gets.chomp
 
       if player_move == 'q'
-        @game_on = false
-        flag = false
+        puts "Exiting game"
+        Process.exit
+      elsif player_move == 'help'
+        show_menu
       elsif @open_spots.include?(player_move.to_i)
         player_move = player_move.to_i
-        flag = false
+        turn = false
         @opponent << player_move
+        @opponent.sort!
         update_board player_move 
-        @opponent.sort! 
       else
-        puts "pick a spot between 0 and 8 that's open"
-        puts "these are taken: #{@occupied}"
+        puts "> pick a spot between 0 and 8 that's open"
+        print "\n"
       end
     end
   end
@@ -130,8 +143,7 @@ class TicTacToeGame
           next if @computer.include?(element)
           @computer << element
           @computer.sort!
-          @occupied << element
-          @open_spots.delete(element)
+          update_board element
           return element
         end
       end
@@ -146,12 +158,6 @@ class TicTacToeGame
 
   def default
     @open_spots.sample
-  end
-
-  def show_game
-    puts "Opponent has #{@opponent}"
-    puts "Computer has #{@computer}"
-    game_over?
   end
 
   def game_over?
@@ -184,9 +190,7 @@ class TicTacToeGame
     return if @corners.empty?
     puts "In take corner"
     move = @corners.sample
-    @open_spots.delete(move)
-    @corners.delete(move)
-    @occupied << move
+    update_board move
     @computer << move
     @computer.sort!
     return move
@@ -196,11 +200,9 @@ class TicTacToeGame
     puts "In take an open spot..."
     move = @open_spots.sample
     @computer << move
-    @occupied << move
+    update_board move
     puts @computer
     @computer.sort!
-    @open_spots.delete(move)
-    @corners.delete(move) if @corners.include?(move)
   end
 
 
@@ -209,10 +211,8 @@ class TicTacToeGame
     WINNING_HANDS[hand].each do |element|
       if !winning_row.include?(element) && !@occupied.include?(element)
         move = element
-        @open_spots.delete(element)
-        @corners.delete(move) if @corners.include?(move)
+        update_board element
         @computer << move
-        @occupied << move
         @computer.sort!
         return move
       end
@@ -222,7 +222,6 @@ class TicTacToeGame
   def check_hands
     puts "in check"
     return if @opponent.length < 2
-    puts "returned yet?"
     WINNING_HANDS.each do |hand, value|
       winning_row_count = 0
       winning_row = []
@@ -231,9 +230,8 @@ class TicTacToeGame
         if @opponent.include?(element)
           winning_row_count += 1
           winning_row << element
-          if @computer.include?(element)
-            winning_row_count -= 1
-          end
+        elsif @computer.include?(element)
+          winning_row_count -= 1
         end
       end
 
