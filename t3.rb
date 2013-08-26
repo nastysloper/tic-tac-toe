@@ -1,5 +1,5 @@
-# To win at Tic Tac Toe, a player must occupy three spaces in a "row"
-# Rows are defined as follows:
+# This program allows a user to play the computer at Tic Tac Toe
+# The aim is to design an AI that will win or draw
 
 require 'pry'
 
@@ -20,16 +20,15 @@ WINNING_HANDS = {
   :hand8 => [2,4,6]
 }
 
-OPEN_SPOTS = [0, 1, 2,
-              3, 4, 5,
-              6, 7, 8]
-
-CORNERS = [0, 2, 6, 8]
-
-class TicTacGame
+class TicTacToeGame
   attr_reader :opponent, :computer
 
   def initialize
+    @open_spots = [0, 1, 2,
+                   3, 4, 5,
+                   6, 7, 8]
+
+    @corners = [0, 2, 6, 8]
     @opponent = []
     @computer = []
     @occupied = []
@@ -39,75 +38,81 @@ class TicTacGame
 
   def play
     while @game_on
-      if OPEN_SPOTS.empty?
-        puts "It's a draw!"
-        @game_on = false 
-      end
-
       player_move
-      show_game 
-
-      puts "It's the computer's turn"
-
+      puts "opponent has: #{@opponent}"
+      status
       computer_move
-      show_game 
+      puts "computer has: #{@computer}"
+      status 
     end
   end
 
-  def player_move # This method is finished, ready to be refactored.
+  def status
+    game_over?
+    draw?
+  end
+
+  def winner?
+    true
+  end
+
+  def draw?
+    if @open_spots.empty?
+      puts "It's a draw!"
+      Process.exit
+    end
+  end
+
+  def update_board move
+    @occupied << move
+    @open_spots.delete(move)
+    @corners.delete(move) if @corners.include?(move)
+  end
+
+  def player_move
     flag = true
     while flag 
+      puts "These are the open spots: #{@open_spots}"
       puts "What's your move?"
       player_move = gets.chomp
 
       if player_move == 'q'
         @game_on = false
         flag = false
-      elsif OPEN_SPOTS.include?(player_move.to_i)
+      elsif @open_spots.include?(player_move.to_i)
         player_move = player_move.to_i
         flag = false
         @opponent << player_move
-        @occupied << player_move
-        OPEN_SPOTS.delete(player_move)
-        CORNERS.delete(player_move) if CORNERS.include?(player_move)
+        update_board player_move 
         @opponent.sort! 
-        return  
       else
-        puts "pick a spot between 0 and 8"
+        puts "pick a spot between 0 and 8 that's open"
         puts "these are taken: #{@occupied}"
       end
     end
   end
 
   def computer_move
-    @turn = true
-
-    while @turn
-      if @computer.length == 2 
-        try_win
-        @turn = false
-      elsif OPEN_SPOTS.include?(4)
-        move = 4
-        OPEN_SPOTS.delete(move)
-        @occupied << move
-        @computer << move  
-        
-        @computer.sort!
-        @turn = false
-      elsif @opponent.length == 1
-        puts "take a corner!"
-        take_corner
-        @turn = false
-      else
-        puts "let's check hands"
-        check_hands
-        @turn = false
-      end
-    end
+    move = nil
+    puts "What will it be? #{@open_spots}"
+    move = take_center
+    move = try_win if !move
+    move = block_opponent if !move
+    move = take_corner if !move
+    move = default if !move
   end
 
+  def take_center
+    return nil if !@open_spots.include?(4)
+    move = 4
+    update_board move
+    @computer << move    
+    @computer.sort!
+    move
+  end
 
   def try_win
+    return nil if @computer.length < 2
     puts "trying for a win"
     WINNING_HANDS.each do |hand, value|
       winning_row = 0
@@ -124,16 +129,24 @@ class TicTacGame
         value.each do |element|
           next if @computer.include?(element)
           @computer << element
-          puts @computer
           @computer.sort!
           @occupied << element
-          return
+          @open_spots.delete(element)
+          return element
         end
       end
     end
-    check_hands 
+    return nil
   end
 
+  def block_opponent
+    puts "In block opp"
+    check_hands
+  end
+
+  def default
+    @open_spots.sample
+  end
 
   def show_game
     puts "Opponent has #{@opponent}"
@@ -141,7 +154,7 @@ class TicTacGame
     game_over?
   end
 
-  def game_over? # check to see if there's a winner
+  def game_over?
     WINNING_HANDS.each do |key, value|
       counter = 0
       value.each do |element|
@@ -149,7 +162,7 @@ class TicTacGame
           counter += 1
           if counter == 3
             puts "opponent is the winner!"
-            @game_on = false
+            Process.exit
           end
         end
       end
@@ -160,64 +173,61 @@ class TicTacGame
           counter += 1
           if counter == 3
             puts "Computer is the winner!"
-            @game_on = false
+            Process.exit
           end
         end
       end
     end
   end
 
-  def take_corner # called from computer move
-    if CORNERS.length == 0
-      take_middle
-    else
-      puts "In take corner"
-      move = CORNERS.sample
-      OPEN_SPOTS.delete(move)
-      CORNERS.delete(move)
-      @occupied << move
-      @computer << move
-      puts @computer
-      @computer.sort!
-    end
+  def take_corner
+    return if @corners.empty?
+    puts "In take corner"
+    move = @corners.sample
+    @open_spots.delete(move)
+    @corners.delete(move)
+    @occupied << move
+    @computer << move
+    @computer.sort!
+    return move
   end
 
   def take_open_spot
     puts "In take an open spot..."
-    move = OPEN_SPOTS.sample
+    move = @open_spots.sample
     @computer << move
     @occupied << move
     puts @computer
     @computer.sort!
-    OPEN_SPOTS.delete(move)
-    CORNERS.delete(move) if CORNERS.include?(move)
+    @open_spots.delete(move)
+    @corners.delete(move) if @corners.include?(move)
   end
 
 
   def block hand, winning_row
     puts "In block"
-    turn = 0
     WINNING_HANDS[hand].each do |element|
       if !winning_row.include?(element) && !@occupied.include?(element)
         move = element
-        OPEN_SPOTS.delete(element)
-        CORNERS.delete(move) if CORNERS.include?(move)
-        turn = 1
-        return element
+        @open_spots.delete(element)
+        @corners.delete(move) if @corners.include?(move)
+        @computer << move
+        @occupied << move
+        @computer.sort!
+        return move
       end
-    end
-    if turn == 0
-      take_corner
     end
   end
 
   def check_hands
-    
+    puts "in check"
+    return if @opponent.length < 2
+    puts "returned yet?"
     WINNING_HANDS.each do |hand, value|
       winning_row_count = 0
-      winning_row = [] # this will track a row that might be a winner
+      winning_row = []
 
-      value.each do |element| # and then iterate over the values in each key.
+      value.each do |element|
         if @opponent.include?(element)
           winning_row_count += 1
           winning_row << element
@@ -229,34 +239,12 @@ class TicTacGame
 
       if winning_row_count == 2
         puts "Opponent is in position to win!"
-          move = block(hand, winning_row)
-          @computer << move
-          @occupied << move
-          puts @computer
-          return
+          return block(hand, winning_row)
       end
     end 
-
-    # if we're here, that means there are no 2 out of three hands.
-    
-      # puts "No 2 out of three?"
-      # move = OPEN_SPOTS.sample
-      # @computer << move
-      # @occupied << move
-      # puts @computer
-      # OPEN_SPOTS.delete(move)
-      # CORNERS.delete(move) if CORNERS.include?(move)
-    
+    return nil
   end 
-
-  def remove_from_list
-  end
-
-  def taken?
-    return true
-  end
-
 end 
 
-game1 = TicTacGame.new
+game1 = TicTacToeGame.new
 game1.play
